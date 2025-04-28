@@ -1,17 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, url_for
 import os
 import cohere
 from vercel.wsgi import VercelWSGI
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../../templates', static_folder='../../static')
 
-# Ambil API key dari environment variable
 cohere_api_key = os.environ.get("COHERE_API_KEY")
 co = cohere.Client(cohere_api_key) if cohere_api_key else None
 
 @app.route("/")
 def index():
-    return "Chatbot is running on Vercel!"
+    return render_template('index.html')
 
 @app.route("/chat", methods=["POST"])
 def chat():
