@@ -3,7 +3,7 @@ import os
 import cohere
 from vercel.wsgi import VercelWSGI
 
-app = Flask(__name__, template_folder='../../templates', static_folder='../../static')
+app = Flask(__name__, template_folder='../templates')
 
 cohere_api_key = os.environ.get("COHERE_API_KEY")
 co = cohere.Client(cohere_api_key) if cohere_api_key else None
