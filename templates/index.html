@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot Web</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <div id="chat-area"></div>
+    <div id="input-area">
+        <input type="text" id="message" placeholder="Ketik pesan Anda...">
+        <button onclick="sendMessage()">Kirim</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const chatArea = document.getElementById('chat-area');
+            const message = messageInput.value;
+            messageInput.value = '';
+
+            chatArea.innerHTML += `<div>Anda: ${message}</div>`;
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            if (data.response) {
+                chatArea.innerHTML += `<div>Bot: ${data.response}</div>`;
+            } else if (data.error) {
+                chatArea.innerHTML += `<div style="color: red;">Error: ${data.error}</div>`;
+            }
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    </script>
+</body>
+</html>
