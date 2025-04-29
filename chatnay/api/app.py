@@ -1,39 +1,34 @@
-from flask import Flask, request, jsonify, render_template, url_for
-import os
+from flask import Flask, request, jsonify, render_template
 import cohere
-from vercel.wsgi import VercelWSGI
+import os
 
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__)
+co = cohere.Client(os.environ.get("COHERE_API_KEY"))
 
-cohere_api_key = os.environ.get("COHERE_API_KEY")
-co = cohere.Client(cohere_api_key) if cohere_api_key else None
-
-@app.route("/")
+@app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route("/chat", methods=["POST"])
+@app.route('/chat', methods=['POST'])
 def chat():
-    if not co:
-        return jsonify({"error": "COHERE_API_KEY tidak dikonfigurasi sebagai environment variable di Vercel."}, 500)
+    user_message = request.json.get('message')
+    if not user_message:
+        return jsonify({'error': 'Pesan tidak ditemukan'}), 400
 
-    data = request.get_json()
-    if not data or "message" not in data:
-        return jsonify({"error": "Payload JSON harus berisi kunci 'message'."}), 400
-
-    message = data["message"]
     try:
         response = co.generate(
-            prompt=message,
-            max_tokens=50,  # Sesuaikan sesuai kebutuhan
-            model="command-r-plus" # Sesuaikan model jika perlu
+            model='command-r-plus',
+            prompt=user_message,
+            max_tokens=150,
+            temperature=0.7,
+            num_generations=1
         )
-        reply = response.generations[0].text
-        return jsonify({"reply": reply})
+        bot_response = response.generations[0].text.strip()
+        return jsonify({'response': bot_response})
     except cohere.error.CohereAPIError as e:
-        return jsonify({"error": f"Error dari Cohere API: {str(e)}"}), 500
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-vercel_app = VercelWSGI(app)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
